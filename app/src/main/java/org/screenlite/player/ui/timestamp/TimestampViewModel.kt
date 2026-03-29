@@ -11,7 +11,7 @@ import org.screenlite.player.data.TimestampState
 import org.screenlite.player.utils.AppLogger
 
 class TimestampViewModel(
-    private val prefs: SharedPreferences
+    prefs: SharedPreferences
 ) : ViewModel() {
     private var prevSyncMs: Long? = null
     private val TAG = "TimestampViewModel"
