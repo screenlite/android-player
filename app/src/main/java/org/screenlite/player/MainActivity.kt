@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private val timestampViewModel: TimestampViewModel by viewModels {
-        TimestampViewModelFactory(getSharedPreferences(AppConstants.PREFS_NAME, Context.MODE_PRIVATE))
+        TimestampViewModelFactory(getSharedPreferences(AppConstants.PREFS_NAME, MODE_PRIVATE))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
