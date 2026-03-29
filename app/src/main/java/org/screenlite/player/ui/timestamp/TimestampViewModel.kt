@@ -7,11 +7,11 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import org.screenlite.player.data.TimestampRepository
 import org.screenlite.player.AppConstants
+import org.screenlite.player.data.TimestampState
 import org.screenlite.player.utils.AppLogger
 
 class TimestampViewModel(
-    private val prefs: SharedPreferences,
-    private val repository: TimestampRepository = TimestampRepository()
+    private val prefs: SharedPreferences
 ) : ViewModel() {
     private var prevSyncMs: Long? = null
     private val TAG = "TimestampViewModel"
@@ -24,12 +24,15 @@ class TimestampViewModel(
                 emit(TimestampState())
             } else {
                 AppLogger.i(TAG, "Timestamp server URL received ('$serverUrl') — subscribing to timestamp stream")
-                emitAll(repository.getTimestampStream(serverUrl))
+                emitAll(TimestampRepository.getTimestampStream(serverUrl))
             }
         }
         .catch { e ->
             AppLogger.e(TAG, "Unhandled error in timestamp pipeline — falling back to disabled state", e)
             emit(TimestampState())
+        }
+        .onCompletion { cause ->
+            AppLogger.d(TAG, "Timestamp pipeline shut down. Cause: $cause")
         }
         .stateIn(
             scope = viewModelScope,
