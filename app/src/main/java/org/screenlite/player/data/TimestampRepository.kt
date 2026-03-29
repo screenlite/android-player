@@ -6,9 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.shareIn
-import okio.ByteString
 import org.screenlite.player.network.WebSocketManager
-import org.screenlite.player.data.TimestampState
 import org.screenlite.player.utils.AppLogger
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -49,7 +47,7 @@ object TimestampRepository {
                             timeoutJob = launch {
                                 delay(timeout)
                                 AppLogger.w(TAG, "Timeout — emitting disabled state")
-                                trySend(TimestampState(timestamp = latestTimestamp ?: 0L, isEnabled = false))
+                                trySend(TimestampState(timestamp = latestTimestamp, isEnabled = false))
                             }
                         } catch (e: Exception) {
                             AppLogger.e(TAG, "Error parsing timestamp bytes", e)
