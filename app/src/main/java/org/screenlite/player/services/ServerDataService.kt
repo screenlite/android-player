@@ -14,11 +14,11 @@ private const val TAG = "ServerDataService"
  */
 class ServerDataService(
     serverUrl: String,
-    private val sharedPrefs: SharedPreferences
+    private val sharedPrefs: SharedPreferences,
+    private val scheduleQueue: ScheduleUpdateQueue
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    // Bounded channel to store incoming messages (max 500 pending)
     private val incomingChannel = Channel<String>(capacity = 500)
 
     private val wsManager = WebSocketManager(
@@ -38,7 +38,7 @@ class ServerDataService(
                 try {
                     val message = ServerMessageParser.parseMessage(msg)
                     if (message != null) {
-                        ServerMessageRouter.route(message, sharedPrefs)
+                        ServerMessageRouter.route(message, sharedPrefs, scheduleQueue)
                     } else {
                         AppLogger.w(TAG, "Failed to parse message: $msg")
                     }

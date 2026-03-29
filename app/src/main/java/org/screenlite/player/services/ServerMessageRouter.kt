@@ -13,23 +13,12 @@ private const val KEY_TIMESTAMP_SERVER = "timestamp_server_url"
 private const val MAX_URL_LENGTH = 200
 
 object ServerMessageRouter {
-    fun route(message: ServerMessage, prefs: SharedPreferences?) {
+    fun route(message: ServerMessage, prefs: SharedPreferences?, scheduleQueue: ScheduleUpdateQueue) {
         when (message.type) {
-            "update" -> handleUpdate(message.data)
-            "command" -> handleCommand(message.data)
+            "player:update_schedule" -> scheduleQueue.enqueue(message.data)
             "ts:server" -> handleTimestampServer(message.data, prefs)
             else -> AppLogger.w(TAG, "Unknown message type: ${message.type}")
         }
-    }
-
-    private fun handleUpdate(payload: JsonObject?) {
-        AppLogger.i(TAG, "Handling update: $payload")
-        // TODO: implement your update logic, e.g., refresh content
-    }
-
-    private fun handleCommand(payload: JsonObject?) {
-        AppLogger.i(TAG, "Handling command: $payload")
-        // TODO: implement your command logic, e.g., play/pause screen
     }
 
     private fun handleTimestampServer(payload: JsonObject?, prefs: SharedPreferences?) {
