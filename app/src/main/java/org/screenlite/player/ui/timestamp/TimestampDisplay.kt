@@ -67,5 +67,5 @@ fun produceTimestampMs(remoteTimestampMs: Long?): State<Long> =
 
 /** Default formatter — e.g. "2026-03-28 14:05:23.417" */
 fun defaultTimestampFormatter(epochMs: Long): String =
-    SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
+    SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S", Locale.getDefault())
         .format(Date(epochMs))
