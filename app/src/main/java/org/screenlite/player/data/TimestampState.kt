@@ -1,4 +1,4 @@
-package org.screenlite.player.ui.timestamp
+package org.screenlite.player.data
 
 /**
  * Represents the state of the Timestamp at any given moment.
