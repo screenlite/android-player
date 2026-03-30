@@ -8,6 +8,8 @@ object AppConstants {
 
     const val WEBSOCKET_URL = "ws://192.168.0.221:3000/ws/screen"
 
+    const val TIMESTAMP_SERVER_PORT = 3001
+
     const val NOTIFICATION_CHANNEL_ID = "ScreenlitePlayerChannel"
     const val NOTIFICATION_ID = 1
 }
