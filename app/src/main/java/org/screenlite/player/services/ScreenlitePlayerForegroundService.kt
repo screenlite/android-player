@@ -17,6 +17,7 @@ class ScreenlitePlayerForegroundService : Service() {
     private var serverDataService: ServerDataService? = null
     private lateinit var sharedPrefs: SharedPreferences
     private var cacheManager: CacheManager? = null
+    private var timestampServer: TimestampServer? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -35,6 +36,13 @@ class ScreenlitePlayerForegroundService : Service() {
 
         cacheManager = CacheManager(sharedPrefs)
         cacheManager?.start()
+
+        try {
+            timestampServer = TimestampServer(AppConstants.TIMESTAMP_SERVER_PORT).also { it.start() }
+            AppLogger.i(TAG, "TimestampServer started on port ${AppConstants.TIMESTAMP_SERVER_PORT}")
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to start TimestampServer", e)
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -62,6 +70,7 @@ class ScreenlitePlayerForegroundService : Service() {
         super.onDestroy()
         AppLogger.i(TAG, "onDestroy: Service is being destroyed")
         serverDataService?.shutdown()
+        timestampServer?.shutdown()
     }
 
     @SuppressLint("ObsoleteSdkInt")
