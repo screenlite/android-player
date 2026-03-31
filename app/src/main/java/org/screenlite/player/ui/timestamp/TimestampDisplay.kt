@@ -17,6 +17,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
 import kotlinx.coroutines.delay
+import org.screenlite.player.data.TimestampState
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -31,24 +32,29 @@ private val secondIndicatorColors = List(10) { i -> Color.hsl(i * 36f, 1f, 0.5f)
  * (each second advances the hue by 6°), making it easy to visually verify the
  * clock is ticking and to distinguish adjacent seconds at a glance.
  *
- * - When [remoteTimestampMs] is non-null, it is shown as-is (static — no local polling).
- * - When [remoteTimestampMs] is null, the local system clock is polled every 10 ms.
+ * - When [state] has a timestamp, it is shown.
+ * - If [state] is null or doesn't have a timestamp, the local system clock is shown.
+ * - If [state] is disabled or timestamp is missing, the indicator and text turn RED.
  *
- * @param remoteTimestampMs  Epoch milliseconds received from the sync server, or null.
+ * @param state              The current timestamp state from the repository.
  * @param formatter          How the epoch ms value is converted to a display string.
  * @param modifier           Standard Compose modifier.
  * @param style              Text style forwarded to the inner [Text].
  */
 @Composable
 fun TimestampDisplay(
-    remoteTimestampMs: Long?,
+    state: TimestampState?,
     modifier: Modifier = Modifier,
     style: TextStyle = TextStyle.Default,
     formatter: (Long) -> String = ::defaultTimestampFormatter,
 ) {
-    val displayMs by produceTimestampMs(remoteTimestampMs)
+    val displayMs by produceTimestampMs(state?.timestamp)
+    
+    // The repository now handles staleness/timeout by emitting isEnabled=false and timestamp=null
+    val isDisconnected = state == null || !state.isEnabled || state.timestamp == null
+
     val second = (displayMs / 1000L % 60L).toInt()
-    val color = secondIndicatorColors[second % secondIndicatorColors.size]
+    val indicatorColor = if (isDisconnected) Color.Red else secondIndicatorColors[second % secondIndicatorColors.size]
 
     Row(
         modifier = modifier.height(IntrinsicSize.Min),
@@ -58,12 +64,12 @@ fun TimestampDisplay(
             modifier = Modifier
                 .fillMaxHeight(1f)
                 .aspectRatio(1f)
-                .background(color)
+                .background(indicatorColor)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = formatter(displayMs),
-            style = style,
+            style = if (isDisconnected) style.copy(color = Color.Red) else style,
         )
     }
 }
@@ -76,8 +82,6 @@ fun TimestampDisplay(
  * Returns a [State<Long>] that either:
  *  - holds [remoteTimestampMs] unchanged (no coroutine launched), or
  *  - ticks the local clock every 10 ms when remote is null.
- *
- * Extracted so it can be reused / tested independently of the Text widget.
  */
 @Composable
 fun produceTimestampMs(remoteTimestampMs: Long?): State<Long> =
