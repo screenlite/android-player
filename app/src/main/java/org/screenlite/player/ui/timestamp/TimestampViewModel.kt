@@ -13,7 +13,6 @@ import org.screenlite.player.utils.AppLogger
 class TimestampViewModel(
     prefs: SharedPreferences
 ) : ViewModel() {
-    private var prevSyncMs: Long? = null
     private val TAG = "TimestampViewModel"
 
     val timestampState: StateFlow<TimestampState?> = prefs.timestampServerUrlFlow()
@@ -33,28 +32,6 @@ class TimestampViewModel(
         }
         .onCompletion { cause ->
             AppLogger.d(TAG, "Timestamp pipeline shut down. Cause: $cause")
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-            initialValue = null
-        )
-
-    val syncServerTimestampMs: StateFlow<Long?> = timestampState
-        .map { state ->
-            when {
-                state == null -> null
-                state.isEnabled -> {
-                    if (prevSyncMs == null) {
-                        AppLogger.d(TAG, "Timestamp feed started — first server timestamp received")
-                    }
-                    state.timestamp
-                }
-                else -> {
-                    AppLogger.w(TAG, "Server timestamp lost — consumers will fall back to device time")
-                    null
-                }
-            }.also { prevSyncMs = it }
         }
         .stateIn(
             scope = viewModelScope,

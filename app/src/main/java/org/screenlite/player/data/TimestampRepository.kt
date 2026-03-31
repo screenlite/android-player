@@ -26,8 +26,20 @@ object TimestampRepository {
             callbackFlow {
                 AppLogger.d(TAG, "Starting connection to $serverUrl")
 
-                var latestTimestamp: Long? = null
-                var timeoutJob: Job? = null
+                var lastUpdateMillis = System.currentTimeMillis()
+                var isCurrentlyEnabled = false
+                
+                // Watchdog to detect frozen/stuck stream at repository level
+                val watchdogJob = launch {
+                    while (isActive) {
+                        delay(1000)
+                        if (isCurrentlyEnabled && (System.currentTimeMillis() - lastUpdateMillis > timeout.inWholeMilliseconds)) {
+                            AppLogger.w(TAG, "Watchdog: No updates for ${timeout.inWholeSeconds}s. Emitting disabled state.")
+                            isCurrentlyEnabled = false
+                            trySend(TimestampState(timestamp = null, isEnabled = false, lastUpdateMillis = lastUpdateMillis))
+                        }
+                    }
+                }
 
                 val wsManager = WebSocketManager(
                     clientName = "TimestampServer",
@@ -40,15 +52,13 @@ object TimestampRepository {
                                 .order(ByteOrder.LITTLE_ENDIAN)
                                 .long
 
-                            latestTimestamp = ts
-                            trySend(TimestampState(timestamp = ts, isEnabled = true))
-
-                            timeoutJob?.cancel()
-                            timeoutJob = launch {
-                                delay(timeout)
-                                AppLogger.w(TAG, "Timeout — emitting disabled state")
-                                trySend(TimestampState(timestamp = latestTimestamp, isEnabled = false))
-                            }
+                            lastUpdateMillis = System.currentTimeMillis()
+                            isCurrentlyEnabled = true
+                            trySend(TimestampState(
+                                timestamp = ts,
+                                isEnabled = true,
+                                lastUpdateMillis = lastUpdateMillis
+                            ))
                         } catch (e: Exception) {
                             AppLogger.e(TAG, "Error parsing timestamp bytes", e)
                         }
@@ -60,7 +70,7 @@ object TimestampRepository {
 
                 awaitClose {
                     AppLogger.i(TAG, "Flow cancelled. Shutting down Timestamp WebSocket and timers.")
-                    timeoutJob?.cancel()
+                    watchdogJob.cancel()
                     wsManager.shutdown()
                 }
             }

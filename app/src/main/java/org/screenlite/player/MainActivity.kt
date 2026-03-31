@@ -46,11 +46,11 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier.fillMaxSize(),
                 colors = SurfaceDefaults.colors(containerColor = Color.Black)
             ) {
-                val remoteTs by timestampViewModel.syncServerTimestampMs.collectAsStateWithLifecycle()
+                val tsState by timestampViewModel.timestampState.collectAsStateWithLifecycle()
 
                 Box(contentAlignment = Alignment.Center) {
                     TimestampDisplay(
-                        remoteTimestampMs = remoteTs,
+                        state = tsState,
                         style = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
                     )
                 }
