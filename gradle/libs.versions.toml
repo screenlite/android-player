@@ -1,6 +1,6 @@
 [versions]
 agp = "9.0.1"
-media3 = "1.5.1"
+media3 = "1.10.0"
 coreKtx = "1.18.0"
 appcompat = "1.7.1"
 coreSplashscreen = "1.2.0"
