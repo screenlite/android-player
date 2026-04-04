@@ -58,4 +58,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.okhttp)
     implementation(libs.java.websocket)
+    implementation(libs.androidx.media3.exoplayer)
 }
